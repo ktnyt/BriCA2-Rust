@@ -1,0 +1,7 @@
+[package]
+name = "brica2"
+version = "0.1.0"
+authors = ["ktnyt <kotone@sfc.keio.ac.jp>"]
+
+[dependencies]
+arrayfire = "3.4.1"
