@@ -126,20 +126,135 @@ macro_rules! component {
     };
 }
 
-component!(Pipe, map: (String, String); |component: &mut Pipe| {
-    let ref inputs = component.base.inputs;
-    let (from, to) = component.map.clone();
-    let mut outputs = HashMap::<String, Arc<af::Array>>::new();
-    match inputs.get(&from) {
-        Some(x) => outputs.insert(to, x.clone()),
-        None    => panic!("Input {} does not exist.", from),
-    };
-    outputs
-});
+//component!(Pipe, map: (String, String); |component: &mut Pipe| {
+//    let ref inputs = component.base.inputs;
+//    let (from, to) = component.map.clone();
+//    let mut outputs = HashMap::<String, Arc<af::Array>>::new();
+//    match inputs.get(&from) {
+//        Some(x) => outputs.insert(to, x.clone()),
+//        None    => panic!("Input {} does not exist.", from),
+//    };
+//    outputs
+//});
 
+struct Pipe {
+    base: ComponentBase,
+    map: (String, String),
+}
+
+macro_rules! delegate {
+    { with $base:ident; $($tt:tt)* } =>
+    { delegate! { @expand_fn $base $($tt)* } };
+
+    { @expand_fn $base:ident fn $func:ident(self); $($tt:tt)* } =>
+    { fn $func(self) { self.$base.$func(); } delegate! { @expand_fn $base $($tt)* } };
+
+    { @expand_fn $base:ident fn $func:ident(&self); $($tt:tt)* } =>
+    { fn $func(&self) { self.$base.$func(); } delegate! { @expand_fn $base $($tt)* } };
+
+    { @expand_fn $base:ident fn $func:ident(&mut self); $($tt:tt)* } =>
+    { fn $func(&mut self) { self.$base.$func(); } delegate! { @expand_fn $base $($tt)* } };
+
+    { @expand_fn $base:ident fn $func:ident(self) -> $ret:ty; $($tt:tt)* } =>
+    { fn $func(self) -> $ret { self.$base.$func() } delegate! { @expand_fn $base $($tt)* } };
+
+    { @expand_fn $base:ident fn $func:ident(&self) -> $ret:ty; $($tt:tt)* } =>
+    { fn $func(&self) -> $ret { self.$base.$func() } delegate! { @expand_fn $base $($tt)* } };
+
+    { @expand_fn $base:ident fn $func:ident(&mut self) -> $ret:ty; $($tt:tt)* } =>
+    { fn $func(&mut self) -> $ret { self.$base.$func() } delegate! { @expand_fn $base $($tt)* } };
+
+    { @expand_fn $base:ident fn $func:ident(self, $($name:ident : $ty:ty),*); $($tt:tt)* } =>
+    { fn $func(self, $($name:$ty),*) { self.$base.$func($($name),*); } delegate! { @expand_fn $base $($tt)* } };
+
+    { @expand_fn $base:ident fn $func:ident(&self, $($name:ident : $ty:ty),*); $($tt:tt)* } =>
+    { fn $func(&self, $($name:$ty),*) { self.$base.$func($($name),*); } delegate! { @expand_fn $base $($tt)* } };
+
+    { @expand_fn $base:ident fn $func:ident(&mut self, $($name:ident : $ty:ty),*); $($tt:tt)* } =>
+    { fn $func(&mut self, $($name:$ty),*) { self.$base.$func($($name),*); } delegate! { @expand_fn $base $($tt)* } };
+
+    { @expand_fn $base:ident fn $func:ident(self, $($name:ident : $ty:ty),*) -> $ret:ty; $($tt:tt)* } =>
+    { fn $func(self, $($name:$ty),*) -> $ret { self.$base.$func($($name),*) } delegate! { @expand_fn $base $($tt)* } };
+
+    { @expand_fn $base:ident fn $func:ident(&self, $($name:ident : $ty:ty),*) -> $ret:ty; $($tt:tt)* } =>
+    { fn $func(&self, $($name:$ty),*) -> $ret { self.$base.$func($($name),*) } delegate! { @expand_fn $base $($tt)* } };
+
+    { @expand_fn $base:ident fn $func:ident(&mut self, $($name:ident : $ty:ty),*) -> $ret:ty; $($tt:tt)* } =>
+    { fn $func(&mut self, $($name:$ty),*) -> $ret { self.$base.$func($($name),*) } delegate! { @expand_fn $base $($tt)* } };
+
+    { @expand_fn $base:ident } => {};
+
+    { @expand_fn $base:ident fn $func:ident(self); } =>
+    { fn $func(self) { self.$base.$func(); } };
+
+    { @expand_fn $base:ident fn $func:ident(&self); } =>
+    { fn $func(&self) { self.$base.$func(); } };
+
+    { @expand_fn $base:ident fn $func:ident(&mut self); } =>
+    { fn $func(&mut self) { self.$base.$func(); } };
+
+    { @expand_fn $base:ident fn $func:ident(self) -> $ret:ty; } =>
+    { fn $func(self) -> $ret { self.$base.$func() } };
+
+    { @expand_fn $base:ident fn $func:ident(&self) -> $ret:ty; } =>
+    { fn $func(&self) -> $ret { self.$base.$func() } };
+
+    { @expand_fn $base:ident fn $func:ident(&mut self) -> $ret:ty; } =>
+    { fn $func(&mut self) -> $ret { self.$base.$func() } };
+
+    { @expand_fn $base:ident fn $func:ident(self, $($name:ident : $ty:ty),*); } =>
+    { fn $func(self, $($name:$ty),*) { self.$base.$func($($name),*); } };
+
+    { @expand_fn $base:ident fn $func:ident(&self, $($name:ident : $ty:ty),*); } =>
+    { fn $func(&self, $($name:$ty),*) { self.$base.$func($($name),*); } };
+
+    { @expand_fn $base:ident fn $func:ident(&mut self, $($name:ident : $ty:ty),*); } =>
+    { fn $func(&mut self, $($name:$ty),*) { self.$base.$func($($name),*); } };
+
+    { @expand_fn $base:ident fn $func:ident(self, $($name:ident : $ty:ty),*) -> $ret:ty; } =>
+    { fn $func(self, $($name:$ty),*) -> $ret { self.$base.$func($($name),*) } };
+
+    { @expand_fn $base:ident fn $func:ident(&self, $($name:ident : $ty:ty),*) -> $ret:ty; } =>
+    { fn $func(&self, $($name:$ty),*) -> $ret { self.$base.$func($($name),*) } };
+
+    { @expand_fn $base:ident fn $func:ident(&mut self, $($name:ident : $ty:ty),*) -> $ret:ty; } =>
+    { fn $func(&mut self, $($name:$ty),*) -> $ret { self.$base.$func($($name),*) } };
+}
+
+impl Pipe {
+    fn new(map: (String, String)) -> Self {
+        Pipe {
+            base: ComponentBase::new(),
+            map: map,
+        }
+    }
+}
+
+impl Component for Pipe {
+    delegate! {
+        with base;
+        fn make_in_port(&mut self, key: String, dims: af::Dim4);
+        fn get_in_port(&mut self, key: String) -> &mut Port;
+        fn make_out_port(&mut self, key: String, dims: af::Dim4);
+        fn get_out_port(&mut self, key: String) -> &mut Port;
+        fn input(&mut self);
+        fn output(&mut self);
+    }
+
+    fn fire(&mut self) {
+        let ref inputs = self.base.inputs;
+        let (from, to) = self.map.clone();
+        let mut outputs = HashMap::<String, Arc<af::Array>>::new();
+        match inputs.get(&from) {
+            Some(x) => outputs.insert(to, x.clone()),
+            None    => panic!("Input {} does not exist.", from),
+        };
+        self.base.outputs = outputs;
+    }
+}
 
 #[test]
-fn constant() {
+fn pipe() {
     af::set_backend(af::Backend::CPU);
 
     let n_rows: u64 = 5;
