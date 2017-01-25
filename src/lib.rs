@@ -1,9 +1,10 @@
 extern crate arrayfire as af;
 
 #[macro_use]
-mod delegate;
-mod port;
-mod component;
+pub mod delegate;
+pub mod unit;
+pub mod port;
+pub mod component;
 
 #[cfg(test)]
 mod tests {

@@ -1,75 +1,40 @@
 use port::Port;
+use unit::*;
 use std::collections::HashMap;
 use std::sync::Arc;
 use af;
 
-pub trait Component {
-    fn make_in_port(&mut self, key: String, dims: af::Dim4);
-    fn get_in_port(&mut self, key: String) -> &mut Port;
-    fn make_out_port(&mut self, key: String, dims: af::Dim4);
-    fn get_out_port(&mut self, key: String) -> &mut Port;
+pub trait Component : Unit {
     fn input(&mut self);
     fn output(&mut self);
     fn fire(&mut self);
 }
 
-struct ComponentBase {
-    in_ports:  HashMap<String, Port>,
-    out_ports: HashMap<String, Port>,
-    inputs:  HashMap<String, Arc<af::Array>>,
+pub struct ComponentStruct {
+    unit: UnitStruct,
+    inputs: HashMap<String, Arc<af::Array>>,
     outputs: HashMap<String, Arc<af::Array>>,
 }
 
-impl ComponentBase {
+impl ComponentStruct {
     pub fn new() -> Self {
-        ComponentBase {
-            in_ports:  HashMap::new(),
-            out_ports: HashMap::new(),
-            inputs:  HashMap::new(),
+        ComponentStruct {
+            unit: UnitStruct::new(),
+            inputs: HashMap::new(),
             outputs: HashMap::new(),
         }
     }
 }
 
-impl ComponentBase {
-    pub fn make_in_port(&mut self, key: String, dims: af::Dim4) {
-        self.in_ports.insert(key.clone(), Port::new(dims));
-        self.inputs.insert(key.clone(), Arc::new(af::constant(0.0, dims)));
-    }
-
-    pub fn get_in_port(&mut self, key: String) -> &mut Port {
-        match self.in_ports.get_mut(&key) {
-            Some(x) => x,
-            None    => panic!("In port {} does not exist", key),
-        }
-    }
-
-    pub fn make_out_port(&mut self, key: String, dims: af::Dim4) {
-        self.out_ports.insert(key.clone(), Port::new(dims));
-        self.outputs.insert(key.clone(), Arc::new(af::constant(0.0, dims)));
-    }
-
-    pub fn get_out_port(&mut self, key: String) -> &mut Port {
-        match self.out_ports.get_mut(&key) {
-            Some(x) => x,
-            None    => panic!("Out port {} does not exist", key),
-        }
-    }
-
-    pub fn connect(&mut self, from: String, other: &mut Component, to: String) {
-        let mut in_port = self.get_in_port(from);
-        let out_port = other.get_out_port(to);
-        in_port.connect(out_port);
-    }
-
+impl ComponentStruct {
     pub fn input(&mut self) {
-        for (key, port) in &self.in_ports {
+        for (key, port) in self.unit.get_in_ports() {
             self.inputs.insert(key.clone(), port.read());
         }
     }
 
     pub fn output(&mut self) {
-        for (key, port) in &mut self.out_ports {
+        for (key, port) in self.unit.get_out_ports() {
             match self.outputs.get(key) {
                 Some(x) => port.write(x.clone()),
                 None    => panic!("Output for key {} does not exist", key),
@@ -78,27 +43,69 @@ impl ComponentBase {
     }
 }
 
+impl Unit for ComponentStruct {
+    fn make_in_port(&mut self, key: String, dims: af::Dim4) {
+        self.unit.make_in_port(key.clone(), dims);
+        self.inputs.insert(key.clone(), Arc::new(af::constant(0.0, dims)));
+    }
+
+    fn remove_in_port(&mut self, key: String) {
+        self.unit.remove_in_port(key.clone());
+        self.inputs.remove(&key);
+    }
+
+    fn make_out_port(&mut self, key: String, dims: af::Dim4) {
+        self.unit.make_out_port(key.clone(), dims);
+        self.outputs.insert(key.clone(), Arc::new(af::constant(0.0, dims)));
+    }
+
+    fn remove_out_port(&mut self, key: String) {
+        self.unit.remove_out_port(key.clone());
+        self.outputs.remove(&key);
+    }
+
+    delegate! {
+        for unit;
+        fn get_in_port(&mut self, key: String) -> &mut Port;
+        fn get_in_ports(&mut self) -> &mut HashMap<String, Port>;
+        fn get_out_port(&mut self, key: String) -> &mut Port;
+        fn get_out_ports(&mut self) -> &mut HashMap<String, Port>;
+        fn connect(&mut self, from: String, other: &mut Unit, to: String);
+    }
+}
+
 pub struct Pipe {
-    base: ComponentBase,
+    base: ComponentStruct,
     map: (String, String),
 }
 
 impl Pipe {
-    fn new(map: (String, String)) -> Self {
+    pub fn new(map: (String, String)) -> Self {
         Pipe {
-            base: ComponentBase::new(),
+            base: ComponentStruct::new(),
             map: map,
         }
     }
 }
 
-impl Component for Pipe {
+impl Unit for Pipe {
     delegate! {
-        to base;
+        for base;
         fn make_in_port(&mut self, key: String, dims: af::Dim4);
         fn get_in_port(&mut self, key: String) -> &mut Port;
+        fn get_in_ports(&mut self) -> &mut HashMap<String, Port>;
+        fn remove_in_port(&mut self, key: String);
         fn make_out_port(&mut self, key: String, dims: af::Dim4);
         fn get_out_port(&mut self, key: String) -> &mut Port;
+        fn get_out_ports(&mut self) -> &mut HashMap<String, Port>;
+        fn remove_out_port(&mut self, key: String);
+        fn connect(&mut self, from: String, other: &mut Unit, to: String);
+    }
+}
+
+impl Component for Pipe {
+    delegate! {
+        for base;
         fn input(&mut self);
         fn output(&mut self);
     }
