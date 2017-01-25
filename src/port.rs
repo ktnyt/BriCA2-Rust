@@ -32,7 +32,7 @@ impl Port {
 }
 
 #[test]
-fn port() {
+fn it_works() {
     af::set_backend(af::Backend::CPU);
 
     let n_rows: u64 = 5;
