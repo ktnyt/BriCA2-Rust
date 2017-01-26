@@ -15,7 +15,7 @@ impl Port {
         }
     }
 
-    pub fn connect(&mut self, port: &Port) {
+    pub fn entangle(&mut self, port: &Port) {
         if self.dims != port.dims {
             panic!("Mismatched port dimensions (expected: {} actual: {})", self.dims, port.dims);
         }
@@ -45,7 +45,7 @@ fn it_works() {
     let mut p0 = Port::new(dims);
     let p1 = Port::new(dims);
 
-    p0.connect(&p1);
+    p0.entangle(&p1);
 
     let a0 = p0.read();
     let a1 = p1.read();

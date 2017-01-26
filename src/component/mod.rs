@@ -89,8 +89,10 @@ impl Unit for ComponentStruct {
         for unit;
         fn get_in_port(&mut self, key: &str) -> &mut Port;
         fn get_in_ports(&mut self) -> &mut HashMap<String, Port>;
+        fn alias_in_port(&mut self, from: &str, other: &mut Unit, to: &str);
         fn get_out_port(&mut self, key: &str) -> &mut Port;
         fn get_out_ports(&mut self) -> &mut HashMap<String, Port>;
+        fn alias_out_port(&mut self, from: &str, other: &mut Unit, to: &str);
         fn connect(&mut self, from: &str, other: &mut Unit, to: &str);
     }
 }

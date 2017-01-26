@@ -27,10 +27,12 @@ impl Unit for Constant {
         fn get_in_port(&mut self, key: &str) -> &mut Port;
         fn get_in_ports(&mut self) -> &mut HashMap<String, Port>;
         fn remove_in_port(&mut self, key: &str);
+        fn alias_in_port(&mut self, from: &str, other: &mut Unit, to: &str);
         fn make_out_port(&mut self, key: &str, dims: af::Dim4);
         fn get_out_port(&mut self, key: &str) -> &mut Port;
         fn get_out_ports(&mut self) -> &mut HashMap<String, Port>;
         fn remove_out_port(&mut self, key: &str);
+        fn alias_out_port(&mut self, from: &str, other: &mut Unit, to: &str);
         fn connect(&mut self, from: &str, other: &mut Unit, to: &str);
     }
 }

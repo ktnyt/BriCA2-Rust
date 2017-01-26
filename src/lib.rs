@@ -5,6 +5,7 @@ pub mod delegate;
 pub mod unit;
 pub mod port;
 pub mod component;
+pub mod module;
 
 #[cfg(test)]
 mod tests {

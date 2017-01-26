@@ -7,10 +7,12 @@ pub trait Unit {
     fn get_in_port(&mut self, key: &str) -> &mut Port;
     fn get_in_ports(&mut self) -> &mut HashMap<String, Port>;
     fn remove_in_port(&mut self, key: &str);
+    fn alias_in_port(&mut self, from: &str, other: &mut Unit, to: &str);
     fn make_out_port(&mut self, key: &str, dims: af::Dim4);
     fn get_out_port(&mut self, key: &str) -> &mut Port;
     fn get_out_ports(&mut self) -> &mut HashMap<String, Port>;
     fn remove_out_port(&mut self, key: &str);
+    fn alias_out_port(&mut self, from: &str, other: &mut Unit, to: &str);
     fn connect(&mut self, from: &str, other: &mut Unit, to: &str);
 }
 
@@ -49,6 +51,12 @@ impl Unit for UnitStruct {
         self.in_ports.remove(&key.to_string());
     }
 
+    fn alias_in_port(&mut self, from: &str, other: &mut Unit, to: &str) {
+        let mut from_port = self.get_in_port(from);
+        let to_port = other.get_in_port(to);
+        from_port.entangle(to_port);
+    }
+
     fn make_out_port(&mut self, key: &str, dims: af::Dim4) {
         self.out_ports.insert(key.to_string(), Port::new(dims));
     }
@@ -68,10 +76,16 @@ impl Unit for UnitStruct {
         self.out_ports.remove(&key.to_string());
     }
 
+    fn alias_out_port(&mut self, from: &str, other: &mut Unit, to: &str) {
+        let mut from_port = self.get_out_port(from);
+        let to_port = other.get_out_port(to);
+        from_port.entangle(to_port);
+    }
+
     fn connect(&mut self, from: &str, other: &mut Unit, to: &str) {
         let mut in_port = self.get_in_port(from);
         let out_port = other.get_out_port(to);
-        in_port.connect(out_port);
+        in_port.entangle(out_port);
     }
 }
 
