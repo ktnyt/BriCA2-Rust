@@ -6,21 +6,21 @@ use std::sync::Arc;
 use af;
 
 #[derive(Clone)]
-pub struct Pipe {
+pub struct Constant {
     base: ComponentStruct,
-    map: (String, String),
+    value: af::Array,
 }
 
-impl Pipe {
-    pub fn new(map: (&str, &str)) -> Self {
-        Pipe {
+impl Constant {
+    pub fn new(value: af::Array) -> Self {
+        Constant {
             base: ComponentStruct::new(),
-            map: (map.0.to_string(), map.1.to_string()),
+            value: value,
         }
     }
 }
 
-impl Unit for Pipe {
+impl Unit for Constant {
     delegate! {
         for base;
         fn make_in_port(&mut self, key: &str, dims: af::Dim4);
@@ -35,7 +35,7 @@ impl Unit for Pipe {
     }
 }
 
-impl Component for Pipe {
+impl Component for Constant {
     delegate! {
         for base;
         fn input(&mut self);
@@ -45,13 +45,9 @@ impl Component for Pipe {
     }
 
     fn fire(&mut self) {
-        let ref inputs = self.base.inputs;
-        let (from, to) = self.map.clone();
+        let value = self.value.clone();
         let mut outputs = HashMap::<String, Arc<af::Array>>::new();
-        match inputs.get(&from) {
-            Some(x) => outputs.insert(to, x.clone()),
-            None    => panic!("Input {} does not exist.", from),
-        };
+        outputs.insert("out".to_string(), Arc::new(value));
         self.base.outputs = outputs;
     }
 }
@@ -66,9 +62,8 @@ fn it_works() {
     let dims = af::Dim4::new(&[n_rows, n_cols, 1, 1]);
     let ones = af::constant(1.0, dims);
 
-    let mut c0 = Pipe::new(("in", "out"));
+    let mut c0 = Constant::new(ones);
 
-    c0.make_in_port("in", dims);
     c0.make_out_port("out", dims);
 
     let a0 = c0.get_out_port("out").read();
@@ -76,7 +71,6 @@ fn it_works() {
 
     assert_eq!(r0, 0.0);
 
-    c0.get_in_port("in").write(Arc::new(ones));
     c0.input();
     c0.fire();
     c0.output();
@@ -85,4 +79,5 @@ fn it_works() {
     let (r0, _) = af::sum_all(&a0);
 
     assert_eq!(r0, 15.0);
+
 }

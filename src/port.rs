@@ -1,6 +1,7 @@
 use std::sync::{Arc, Mutex};
 use af;
 
+#[derive(Clone)]
 pub struct Port {
     dims: af::Dim4,
     mutex: Arc<Mutex<Arc<af::Array>>>,
@@ -42,7 +43,7 @@ fn it_works() {
     let ones = af::constant(1.0, dims);
 
     let mut p0 = Port::new(dims);
-    let mut p1 = Port::new(dims);
+    let p1 = Port::new(dims);
 
     p0.connect(&p1);
 
@@ -55,7 +56,7 @@ fn it_works() {
     assert_eq!(r0, 0.0);
     assert_eq!(r1, 0.0);
 
-    p1.write(Arc::new(ones));
+    p0.write(Arc::new(ones));
 
     let a0 = p0.read();
     let a1 = p1.read();
