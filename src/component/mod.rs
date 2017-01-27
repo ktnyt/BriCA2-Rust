@@ -87,10 +87,10 @@ impl Unit for ComponentStruct {
 
     delegate! {
         for unit;
-        fn get_in_port(&mut self, key: &str) -> &mut Port;
+        fn get_in_port(&mut self, key: &str) -> Result<&mut Port, String>;
         fn get_in_ports(&mut self) -> &mut HashMap<String, Port>;
         fn alias_in_port(&mut self, from: &str, other: &mut Unit, to: &str);
-        fn get_out_port(&mut self, key: &str) -> &mut Port;
+        fn get_out_port(&mut self, key: &str) -> Result<&mut Port, String>;
         fn get_out_ports(&mut self) -> &mut HashMap<String, Port>;
         fn alias_out_port(&mut self, from: &str, other: &mut Unit, to: &str);
         fn connect(&mut self, from: &str, other: &mut Unit, to: &str);
@@ -123,10 +123,10 @@ fn it_works() {
     connect(&mut c1, "in", &mut c0, "out");
     connect(&mut c2, "in", &mut c1, "out");
 
-    let a0 = c0.get_out_port("out").read();
-    let a1 = c1.get_in_port("in").read();
-    let a2 = c1.get_out_port("out").read();
-    let a3 = c2.get_in_port("in").read();
+    let a0 = c0.get_out_port("out").unwrap().read();
+    let a1 = c1.get_in_port("in").unwrap().read();
+    let a2 = c1.get_out_port("out").unwrap().read();
+    let a3 = c2.get_in_port("in").unwrap().read();
     let (r0, _) = af::sum_all(&a0);
     let (r1, _) = af::sum_all(&a1);
     let (r2, _) = af::sum_all(&a2);
@@ -159,10 +159,10 @@ fn it_works() {
     c1.output();
     c2.output();
 
-    let a0 = c0.get_out_port("out").read();
-    let a1 = c1.get_in_port("in").read();
-    let a2 = c1.get_out_port("out").read();
-    let a3 = c2.get_in_port("in").read();
+    let a0 = c0.get_out_port("out").unwrap().read();
+    let a1 = c1.get_in_port("in").unwrap().read();
+    let a2 = c1.get_out_port("out").unwrap().read();
+    let a3 = c2.get_in_port("in").unwrap().read();
     let (r0, _) = af::sum_all(&a0);
     let (r1, _) = af::sum_all(&a1);
     let (r2, _) = af::sum_all(&a2);
@@ -195,10 +195,10 @@ fn it_works() {
     c1.output();
     c2.output();
 
-    let a0 = c0.get_out_port("out").read();
-    let a1 = c1.get_in_port("in").read();
-    let a2 = c1.get_out_port("out").read();
-    let a3 = c2.get_in_port("in").read();
+    let a0 = c0.get_out_port("out").unwrap().read();
+    let a1 = c1.get_in_port("in").unwrap().read();
+    let a2 = c1.get_out_port("out").unwrap().read();
+    let a3 = c2.get_in_port("in").unwrap().read();
     let (r0, _) = af::sum_all(&a0);
     let (r1, _) = af::sum_all(&a1);
     let (r2, _) = af::sum_all(&a2);
@@ -231,10 +231,10 @@ fn it_works() {
     c1.output();
     c2.output();
 
-    let a0 = c0.get_out_port("out").read();
-    let a1 = c1.get_in_port("in").read();
-    let a2 = c1.get_out_port("out").read();
-    let a3 = c2.get_in_port("in").read();
+    let a0 = c0.get_out_port("out").unwrap().read();
+    let a1 = c1.get_in_port("in").unwrap().read();
+    let a2 = c1.get_out_port("out").unwrap().read();
+    let a3 = c2.get_in_port("in").unwrap().read();
     let (r0, _) = af::sum_all(&a0);
     let (r1, _) = af::sum_all(&a1);
     let (r2, _) = af::sum_all(&a2);

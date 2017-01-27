@@ -24,12 +24,12 @@ impl Unit for Constant {
     delegate! {
         for base;
         fn make_in_port(&mut self, key: &str, dims: af::Dim4);
-        fn get_in_port(&mut self, key: &str) -> &mut Port;
+        fn get_in_port(&mut self, key: &str) -> Result<&mut Port, String>;
         fn get_in_ports(&mut self) -> &mut HashMap<String, Port>;
         fn remove_in_port(&mut self, key: &str);
         fn alias_in_port(&mut self, from: &str, other: &mut Unit, to: &str);
         fn make_out_port(&mut self, key: &str, dims: af::Dim4);
-        fn get_out_port(&mut self, key: &str) -> &mut Port;
+        fn get_out_port(&mut self, key: &str) -> Result<&mut Port, String>;
         fn get_out_ports(&mut self) -> &mut HashMap<String, Port>;
         fn remove_out_port(&mut self, key: &str);
         fn alias_out_port(&mut self, from: &str, other: &mut Unit, to: &str);
@@ -68,7 +68,7 @@ fn it_works() {
 
     c0.make_out_port("out", dims);
 
-    let a0 = c0.get_out_port("out").read();
+    let a0 = c0.get_out_port("out").unwrap().read();
     let (r0, _) = af::sum_all(&a0);
 
     assert_eq!(r0, 0.0);
@@ -77,7 +77,7 @@ fn it_works() {
     c0.fire();
     c0.output();
 
-    let a0 = c0.get_out_port("out").read();
+    let a0 = c0.get_out_port("out").unwrap().read();
     let (r0, _) = af::sum_all(&a0);
 
     assert_eq!(r0, 15.0);
