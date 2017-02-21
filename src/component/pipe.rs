@@ -59,7 +59,7 @@ impl Component for Pipe {
 }
 
 #[test]
-fn it_works() {
+fn pipe_works() {
     af::set_backend(af::Backend::CPU);
 
     let n_rows: u64 = 5;

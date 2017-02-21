@@ -98,7 +98,7 @@ impl Unit for ComponentStruct {
 }
 
 #[test]
-fn it_works() {
+fn component_works() {
     use component::constant::Constant;
     use component::pipe::Pipe;
     use component::null::Null;

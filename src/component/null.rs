@@ -48,7 +48,7 @@ impl Component for Null {
 }
 
 #[test]
-fn it_works() {
+fn null_works() {
     af::set_backend(af::Backend::CPU);
 
     let n_rows: u64 = 5;
